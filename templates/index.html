@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DISHA — Disaster Information & Safety Help Assistant</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #1B3A6B;
+      --accent: #2563EB;
+      --red:    #DC2626;
+      --green:  #16A34A;
+      --bg:     #F1F5F9;
+      --white:  #FFFFFF;
+      --gray1:  #F8FAFC;
+      --gray2:  #E2E8F0;
+      --gray3:  #94A3B8;
+      --dark:   #1E293B;
+      --mid:    #475569;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: var(--dark);
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      flex-shrink: 0;
+    }
+    .logo {
+      width: 42px; height: 42px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .header-text h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.3px; }
+    .header-text p  { font-size: 11px; opacity: 0.72; margin-top: 2px; }
+    .status-dot {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; opacity: 0.85;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #4ADE80;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+
+    /* ── Emergency Banner ── */
+    .emergency-bar {
+      background: #FEF2F2;
+      border-bottom: 1px solid #FECACA;
+      padding: 7px 24px;
+      font-size: 12px;
+      color: var(--red);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .emergency-bar strong { font-weight: 600; }
+
+    /* ── Main layout ── */
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      background: var(--white);
+      border-right: 1px solid var(--gray2);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+    .sidebar-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--gray3);
+      padding: 0 6px 6px;
+    }
+    .quick-btn {
+      background: var(--gray1);
+      border: 1px solid var(--gray2);
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 12px;
+      color: var(--mid);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      line-height: 1.4;
+    }
+    .quick-btn:hover {
+      background: #EFF6FF;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .quick-btn .emoji { margin-right: 6px; }
+    .new-chat-btn {
+      margin-top: auto;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .new-chat-btn:hover { background: #1D4ED8; }
+
+    /* ── Chat area ── */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Welcome screen ── */
+    .welcome {
+      margin: auto;
+      text-align: center;
+      max-width: 420px;
+    }
+    .welcome-icon {
+      font-size: 52px;
+      margin-bottom: 14px;
+    }
+    .welcome h2 {
+      font-size: 20px;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+    .welcome p {
+      font-size: 13px;
+      color: var(--mid);
+      line-height: 1.6;
+    }
+    .welcome-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 18px;
+    }
+    .chip {
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:hover { background: var(--accent); color: white; }
+
+    /* ── Messages ── */
+    .msg { display: flex; gap: 10px; align-items: flex-start; max-width: 780px; }
+    .msg.user { flex-direction: row-reverse; margin-left: auto; }
+
+    .avatar {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .bot-avatar  { background: var(--navy); }
+    .user-avatar { background: var(--accent); }
+
+    .bubble {
+      padding: 11px 15px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 90%;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .bot-bubble {
+      background: var(--white);
+      border: 1px solid var(--gray2);
+      color: var(--dark);
+      border-top-left-radius: 3px;
+    }
+    .user-bubble {
+      background: var(--accent);
+      color: white;
+      border-top-right-radius: 3px;
+    }
+
+    /* ── Typing indicator ── */
+    .typing .bubble {
+      display: flex; gap: 5px; align-items: center;
+      padding: 14px 16px;
+    }
+    .typing-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--gray3);
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* ── Input area ── */
+    .input-area {
+      padding: 14px 20px 18px;
+      background: var(--white);
+      border-top: 1px solid var(--gray2);
+      flex-shrink: 0;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      background: var(--gray1);
+      border: 1.5px solid var(--gray2);
+      border-radius: 12px;
+      padding: 10px 12px;
+      transition: border-color 0.15s;
+    }
+    .input-row:focus-within { border-color: var(--accent); }
+    #userInput {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      color: var(--dark);
+      resize: none;
+      outline: none;
+      max-height: 120px;
+      min-height: 22px;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+    #userInput::placeholder { color: var(--gray3); }
+    #sendBtn {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    #sendBtn:hover { background: #1D4ED8; }
+    #sendBtn:disabled { background: var(--gray2); cursor: not-allowed; }
+    .input-hint {
+      font-size: 11px;
+      color: var(--gray3);
+      margin-top: 6px;
+      padding: 0 2px;
+    }
+
+    /* ── Scrollbar ── */
+    #messages::-webkit-scrollbar { width: 5px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--gray2); border-radius: 4px; }
+
+    @media (max-width: 600px) {
+      .sidebar { display: none; }
+      .emergency-bar { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🆘</div>
+  <div class="header-text">
+    <h1>DISHA — Disaster Information &amp; Safety Help Assistant</h1>
+    <p>Powered by Llama 3 · IIT Delhi Project RP05119G · Generative AI for Emergency Communication</p>
+  </div>
+  <div class="status-dot">
+    <div class="dot"></div> Online
+  </div>
+</header>
+
+<div class="emergency-bar">
+  🚨 <strong>Emergency?</strong>&nbsp; Call NDMA: 1078 &nbsp;|&nbsp; Police: 100 &nbsp;|&nbsp; Ambulance: 108 &nbsp;|&nbsp; Fire: 101
+</div>
+
+<div class="main">
+
+  <aside class="sidebar">
+    <div class="sidebar-title">Quick Topics</div>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">🌊</span>Flood safety & evacuation</button>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">🌍</span>Earthquake response steps</button>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">🌀</span>Cyclone preparedness</button>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">🔥</span>Wildfire evacuation tips</button>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">🌊</span>Tsunami early warning signs</button>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">🎒</span>Emergency kit checklist</button>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">🏠</span>How to shelter in place</button>
+    <button class="quick-btn" onclick="sendQuick(this)"><span class="emoji">📞</span>Emergency contacts India</button>
+    <button class="new-chat-btn" onclick="newChat()">+ New Chat</button>
+  </aside>
+
+  <div class="chat-area">
+    <div id="messages">
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">🆘</div>
+        <h2>Hello, I'm DISHA</h2>
+        <p>I'm an AI assistant for disaster early warning and emergency communication.
+           Ask me about flood safety, earthquake response, cyclone preparedness, evacuation
+           procedures, or any disaster-related question.</p>
+        <div class="welcome-chips">
+          <span class="chip" onclick="sendChip(this)">What to do during a flood?</span>
+          <span class="chip" onclick="sendChip(this)">Earthquake safety steps</span>
+          <span class="chip" onclick="sendChip(this)">Build an emergency kit</span>
+          <span class="chip" onclick="sendChip(this)">Cyclone warning signs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="input-row">
+        <textarea id="userInput" rows="1" placeholder="Ask about disaster safety, evacuations, emergency procedures…"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button id="sendBtn" onclick="sendMessage()">&#9658;</button>
+      </div>
+      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const sessionId = "session_" + Math.random().toString(36).slice(2);
+  let isTyping = false;
+
+  function autoResize(el) {
+    el.style.height = "auto";
+    el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  }
+
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  function hideWelcome() {
+    const w = document.getElementById("welcome");
+    if (w) w.remove();
+  }
+
+  function appendMessage(role, text) {
+    hideWelcome();
+    const messages = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.className = "msg " + role;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar " + (role === "bot" ? "bot-avatar" : "user-avatar");
+    avatar.textContent = role === "bot" ? "🆘" : "👤";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble " + (role === "bot" ? "bot-bubble" : "user-bubble");
+    bubble.textContent = text;
+
+    div.appendChild(avatar);
+    div.appendChild(bubble);
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return bubble;
+  }
+
+  function showTyping() {
+    hideWelcome();
+    const messages = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.className = "msg bot typing";
+    div.id = "typing-indicator";
+    div.innerHTML = `
+      <div class="avatar bot-avatar">🆘</div>
+      <div class="bubble bot-bubble">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>`;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById("typing-indicator");
+    if (t) t.remove();
+  }
+
+  async function sendMessage() {
+    if (isTyping) return;
+    const input = document.getElementById("userInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = "";
+    input.style.height = "auto";
+    document.getElementById("sendBtn").disabled = true;
+    isTyping = true;
+
+    appendMessage("user", text);
+    showTyping();
+
+    try {
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, session_id: sessionId })
+      });
+      const data = await res.json();
+      removeTyping();
+      appendMessage("bot", data.reply || data.error || "Sorry, something went wrong.");
+    } catch (err) {
+      removeTyping();
+      appendMessage("bot", "Connection error. Please check your network and try again.");
+    }
+
+    isTyping = false;
+    document.getElementById("sendBtn").disabled = false;
+    document.getElementById("userInput").focus();
+  }
+
+  function sendQuick(btn) {
+    document.getElementById("userInput").value = btn.textContent.replace(/^[^\w]+ ?/, "").trim();
+    sendMessage();
+  }
+
+  function sendChip(chip) {
+    document.getElementById("userInput").value = chip.textContent;
+    sendMessage();
+  }
+
+  async function newChat() {
+    await fetch("/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId })
+    });
+    const messages = document.getElementById("messages");
+    messages.innerHTML = `
+      <div class="welcome" id="welcome">
+        <div class="welcome-icon">🆘</div>
+        <h2>Hello, I'm DISHA</h2>
+        <p>I'm an AI assistant for disaster early warning and emergency communication.
+           Ask me about flood safety, earthquake response, cyclone preparedness, evacuation
+           procedures, or any disaster-related question.</p>
+        <div class="welcome-chips">
+          <span class="chip" onclick="sendChip(this)">What to do during a flood?</span>
+          <span class="chip" onclick="sendChip(this)">Earthquake safety steps</span>
+          <span class="chip" onclick="sendChip(this)">Build an emergency kit</span>
+          <span class="chip" onclick="sendChip(this)">Cyclone warning signs</span>
+        </div>
+      </div>`;
+  }
+</script>
+</body>
+</html>
