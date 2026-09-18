@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 from groq import Groq
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 app = Flask(__name__)
 
@@ -33,40 +36,45 @@ def index():
     return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
+@app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    user_message = data.get("message", "").strip()
-    session_id = data.get("session_id", "default")
+    try:
+        data = request.json
+        user_message = data.get("message", "").strip()
+        session_id = data.get("session_id", "default")
 
-    if not user_message:
-        return jsonify({"error": "Empty message"}), 400
+        if not user_message:
+            return jsonify({"error": "Empty message"}), 400
 
-    if session_id not in conversations:
-        conversations[session_id] = []
+        if session_id not in conversations:
+            conversations[session_id] = []
 
-    conversations[session_id].append({
-        "role": "user",
-        "content": user_message
-    })
+        conversations[session_id].append({
+            "role": "user",
+            "content": user_message
+        })
 
-    # Keep only last 10 turns to manage context window
-    history = conversations[session_id][-10:]
+        history = conversations[session_id][-10:]
 
-    response = client.chat.completions.create(
-        model="llama3-8b-8192",
-        messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history,
-        max_tokens=600,
-        temperature=0.7,
-    )
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history,
+            max_tokens=600,
+            temperature=0.7,
+        )
 
-    reply = response.choices[0].message.content
+        reply = response.choices[0].message.content
 
-    conversations[session_id].append({
-        "role": "assistant",
-        "content": reply
-    })
+        conversations[session_id].append({
+            "role": "assistant",
+            "content": reply
+        })
 
-    return jsonify({"reply": reply})
+        return jsonify({"reply": reply})
+
+    except Exception as e:
+        print("FULL BACKEND ERROR:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/reset", methods=["POST"])
 def reset():
@@ -76,7 +84,7 @@ def reset():
 
 @app.route("/health")
 def health():
-    return jsonify({"status": "ok", "model": "llama3-8b-8192"})
+    return jsonify({"status": "ok", "model": "openai/gpt-oss-20b"})
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
